@@ -366,6 +366,14 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 		count += c
 
 		if uc.Mcount != 0 {
+
+			// When typ.Kind is reflect.Ptr, PackagePath is not parsed, so read
+			// PkgPath from uncommonType as typ's PackagePath
+			if typ.Kind == reflect.Ptr && len(typ.PackagePath) == 0 {
+				// Resolve package path.
+				typ.PackagePath, _ = p.resolveName(uint64(uc.PkgPath), 0)
+			}
+
 			// We have some methods that needs to be parsed. From source code
 			// comments the Moff attribute is the offset from the beginning of
 			// the uncommon data structure to where the array of methods start.
