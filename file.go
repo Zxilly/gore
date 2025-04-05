@@ -458,7 +458,7 @@ func (f *GoFile) initPclntab() error {
 		// Since the moduledata starts with the address to the pclntab, we can use this to find the moduledata structure.
 		runtimeText, err := f.findRuntimeText(textStart, textStart+uint64(len(textData)), f.pclntabAddr, moddataSection)
 		if err != nil {
-			if f.FileInfo.OS == "macOS" && f.FileInfo.Arch == ArchARM64 {
+			if f.FileInfo.OS == "macOS" {
 				t, err := f.findRuntimeTextMachoChainedFixups(f.pclntabAddr)
 				if err != nil {
 					f.pclntabError = fmt.Errorf("failed to find runtime.text symbol: %w", err)
