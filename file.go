@@ -31,7 +31,6 @@ import (
 	"sync"
 
 	"github.com/blacktop/go-macho"
-	"github.com/blacktop/go-macho/pkg/fixupchains"
 )
 
 var (
@@ -487,32 +486,15 @@ func (f *GoFile) PCLNTab() (*gosym.Table, error) {
 
 func (f *GoFile) findRuntimeTextMachoChainedFixups(pclntabAddr uint64) (uint64, error) {
 	mf := f.fh.getParsedFile().(*macho.File)
-	fixups, err := mf.DyldChainedFixups()
-	if err != nil {
-		return 0, err
-	}
-	baseAddr := mf.GetBaseAddress()
-	var rebases []fixupchains.Rebase
-	for _, start := range fixups.Starts {
-		rebases = append(rebases, start.Rebases()...)
-	}
 
 	// First, we need to find the start of the moduledata
-	var moduledataAddr uint64
-	for _, rb := range rebases {
-		if rb.Target()+baseAddr == pclntabAddr {
-			moduledataAddr = baseAddr + rb.Offset()
-			break
-		}
+	moduledataAddr, err := mf.GetSlidPointerAtAddress(pclntabAddr)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get moduledata address from pclntab address: %w", err)
 	}
-	// then, find field 22
-	addr22 := moduledataAddr + 22*8
-	for _, rb := range rebases {
-		if rb.Offset()+baseAddr == addr22 {
-			return baseAddr + rb.Target(), nil
-		}
-	}
-	return 0, fmt.Errorf("failed to find runtime.text symbol")
+
+	// then, field 22 is runtime.text
+	return moduledataAddr + 22*8, nil
 }
 
 func (f *GoFile) findRuntimeText(textStart, textEnd, pclntabAddr uint64, modSectiondata []byte) (uint64, error) {
