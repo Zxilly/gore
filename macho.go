@@ -174,6 +174,10 @@ func (m *machoFile) getPCLNTABData() (uint64, []byte, error) {
 }
 
 func (m *machoFile) moduledataSection() string {
+	// In Go 1.26, the moduledata was moved to its own section.
+	if section := m.file.Section("__DATA", "__go_module"); section != nil {
+		return "__go_module"
+	}
 	return "__noptrdata"
 }
 

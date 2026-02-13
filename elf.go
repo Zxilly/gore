@@ -152,6 +152,10 @@ func (e *elfFile) getPCLNTABData() (uint64, []byte, error) {
 }
 
 func (e *elfFile) moduledataSection() string {
+	// In Go 1.26, the moduledata was moved to its own section.
+	if section := e.file.Section(".go.module"); section != nil {
+		return ".go.module"
+	}
 	return ".noptrdata"
 }
 
