@@ -27,7 +27,6 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/blacktop/go-macho"
 	"github.com/goretk/gore/extern"
 	"github.com/goretk/gore/extern/gover"
 )
@@ -304,10 +303,8 @@ search:
 	off = bytes.Index(secData, magic)
 
 	if off == -1 {
-		if mf, ok := f.fh.getParsedFile().(*macho.File); ok && f.FileInfo.WordSize == 8 {
-			r := newMachoResolver(mf)
-			off = findPointerValue(r, secAddr, secData, tabAddr, f.FileInfo.WordSize, f.FileInfo.ByteOrder)
-		}
+		r := newPointerResolver(f.fh)
+		off = findPointerValue(r, secAddr, secData, tabAddr, f.FileInfo.WordSize, f.FileInfo.ByteOrder)
 	}
 
 load:
@@ -320,6 +317,9 @@ load:
 		return moduledata{}, fmt.Errorf("offset %d is out of bounds %d", off, len(secData))
 	}
 
+	// When the section is slightly smaller than the struct (e.g. Go 1.26's __go_module
+	// section may be 1 byte short), zero-fill the remainder. The trailing fields
+	// (typically slice capacities) are not critical for analysis.
 	var data []byte
 	if available >= vmdSize {
 		data = secData[off : off+vmdSize]
@@ -328,19 +328,41 @@ load:
 		copy(data, secData[off:])
 	}
 
-	if mf, ok := f.fh.getParsedFile().(*macho.File); ok && f.FileInfo.WordSize == 8 {
-		r := newMachoResolver(mf)
-		data = resolveBuffer(r, data, secAddr+uint64(off), f.FileInfo.WordSize, f.FileInfo.ByteOrder)
+	// On macOS/ELF PIE, pointer fields contain fixup descriptors instead of
+	// virtual addresses. Resolve them before binary.Read so derived values
+	// like TextLen = Etext - Text are computed from correct addresses.
+	resolver := newPointerResolver(f.fh)
+	if resolver != nil {
+		baseAddr := secAddr + uint64(off)
+		ws := f.FileInfo.WordSize
+		bo := f.FileInfo.ByteOrder
+		for _, ptrOff := range vmd.pointerOffsets() {
+			if ptrOff+ws > len(data) {
+				break
+			}
+			var raw uint64
+			if ws == 4 {
+				raw = uint64(bo.Uint32(data[ptrOff:]))
+			} else {
+				raw = bo.Uint64(data[ptrOff:])
+			}
+			val := resolver.ResolvePointer(raw, baseAddr+uint64(ptrOff))
+			if val != raw {
+				if ws == 4 {
+					bo.PutUint32(data[ptrOff:], uint32(val))
+				} else {
+					bo.PutUint64(data[ptrOff:], val)
+				}
+			}
+		}
 	}
 
-	// Read the module struct from the file.
 	r := bytes.NewReader(data)
 	err = binary.Read(r, f.FileInfo.ByteOrder, vmd)
 	if err != nil {
 		return moduledata{}, fmt.Errorf("error when reading module data from file: %w", err)
 	}
 
-	// Convert the read struct to the type we return to the caller.
 	md := vmd.toModuledata()
 
 	// Take a simple validation step to ensure that the moduledata is valid.
@@ -379,4 +401,5 @@ func readUIntTo64(r io.Reader, byteOrder binary.ByteOrder, is32bit bool) (addr u
 
 type modulable interface {
 	toModuledata() moduledata
+	pointerOffsets() []int
 }
