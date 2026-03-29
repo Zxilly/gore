@@ -356,6 +356,43 @@ func (g *moduleDataGenerator) writeVersionedModuleData(versionCode int, code str
 		}
 
 		g.writeln("}\n}\n")
+
+		// generate pointerOffsets method
+		g.writeln("func (md %s) pointerOffsets() []int {", g.generateTypeName(versionCode, bits))
+		g.writeln("return []int{")
+		byteOffset := 0
+		wordSize := bits / 8
+	ptrSearch:
+		for _, field := range structExpr.Fields.List {
+			if len(field.Names) == 0 {
+				continue
+			}
+			for _, name := range field.Names {
+				if name.Name == "modulename" {
+					break ptrSearch
+				}
+				switch t := field.Type.(type) {
+				case *ast.StarExpr:
+					g.writeln("%d,", byteOffset)
+					byteOffset += wordSize
+				case *ast.ArrayType:
+					g.writeln("%d,", byteOffset) // data ptr
+					byteOffset += 3 * wordSize   // data, len, cap
+				case *ast.Ident:
+					switch t.Name {
+					case "uintptr":
+						g.writeln("%d,", byteOffset)
+						byteOffset += wordSize
+					case "string":
+						g.writeln("%d,", byteOffset) // data ptr
+						byteOffset += 2 * wordSize   // data, len
+					case "uint8":
+						byteOffset += 1
+					}
+				}
+			}
+		}
+		g.writeln("}\n}\n")
 	}
 
 	writeCode(32)

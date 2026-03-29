@@ -65,6 +65,31 @@ func (md moduledata_1_5_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_5_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+	}
+}
+
 type moduledata_1_5_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap uint64
 	Ftab, Ftablen, Ftabcap                uint64
@@ -106,6 +131,31 @@ func (md moduledata_1_5_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_5_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
 	}
 }
 
@@ -153,6 +203,31 @@ func (md moduledata_1_6_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_6_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+	}
+}
+
 type moduledata_1_6_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap uint64
 	Ftab, Ftablen, Ftabcap                uint64
@@ -194,6 +269,31 @@ func (md moduledata_1_6_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_6_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
 	}
 }
 
@@ -248,6 +348,34 @@ func (md moduledata_1_7_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_7_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+	}
+}
+
 type moduledata_1_7_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap uint64
 	Ftab, Ftablen, Ftabcap                uint64
@@ -296,6 +424,34 @@ func (md moduledata_1_7_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_7_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
 	}
 }
 
@@ -354,6 +510,38 @@ func (md moduledata_1_8_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_8_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_8_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -406,6 +594,38 @@ func (md moduledata_1_8_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_8_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -464,6 +684,38 @@ func (md moduledata_1_9_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_9_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_9_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -516,6 +768,38 @@ func (md moduledata_1_9_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_9_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -574,6 +858,38 @@ func (md moduledata_1_10_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_10_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_10_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -626,6 +942,38 @@ func (md moduledata_1_10_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_10_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -684,6 +1032,38 @@ func (md moduledata_1_11_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_11_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_11_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -736,6 +1116,38 @@ func (md moduledata_1_11_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_11_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -794,6 +1206,38 @@ func (md moduledata_1_12_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_12_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_12_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -846,6 +1290,38 @@ func (md moduledata_1_12_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_12_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -904,6 +1380,38 @@ func (md moduledata_1_13_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_13_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_13_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -956,6 +1464,38 @@ func (md moduledata_1_13_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_13_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -1014,6 +1554,38 @@ func (md moduledata_1_14_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_14_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_14_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -1066,6 +1638,38 @@ func (md moduledata_1_14_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_14_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -1124,6 +1728,38 @@ func (md moduledata_1_15_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_15_32) pointerOffsets() []int {
+	return []int{
+		0,
+		12,
+		24,
+		36,
+		40,
+		44,
+		48,
+		52,
+		56,
+		60,
+		64,
+		68,
+		72,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		120,
+		132,
+		144,
+		156,
+		164,
+	}
+}
+
 type moduledata_1_15_64 struct {
 	Pclntable, Pclntablelen, Pclntablecap       uint64
 	Ftab, Ftablen, Ftabcap                      uint64
@@ -1176,6 +1812,38 @@ func (md moduledata_1_15_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_15_64) pointerOffsets() []int {
+	return []int{
+		0,
+		24,
+		48,
+		72,
+		80,
+		88,
+		96,
+		104,
+		112,
+		120,
+		128,
+		136,
+		144,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		240,
+		264,
+		288,
+		312,
+		328,
 	}
 }
 
@@ -1238,6 +1906,42 @@ func (md moduledata_1_16_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_16_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		160,
+		172,
+		184,
+		196,
+		204,
+	}
+}
+
 type moduledata_1_16_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -1294,6 +1998,42 @@ func (md moduledata_1_16_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_16_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		320,
+		344,
+		368,
+		392,
+		408,
 	}
 }
 
@@ -1356,6 +2096,42 @@ func (md moduledata_1_17_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_17_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		160,
+		172,
+		184,
+		196,
+		204,
+	}
+}
+
 type moduledata_1_17_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -1412,6 +2188,42 @@ func (md moduledata_1_17_64) toModuledata() moduledata {
 		FuncTabLen:    md.Ftablen,
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
+	}
+}
+
+func (md moduledata_1_17_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		320,
+		344,
+		368,
+		392,
+		408,
 	}
 }
 
@@ -1477,6 +2289,44 @@ func (md moduledata_1_18_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_18_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		168,
+		180,
+		192,
+		204,
+		212,
+	}
+}
+
 type moduledata_1_18_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -1536,6 +2386,44 @@ func (md moduledata_1_18_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_18_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		336,
+		360,
+		384,
+		408,
+		424,
 	}
 }
 
@@ -1601,6 +2489,44 @@ func (md moduledata_1_19_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_19_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		168,
+		180,
+		192,
+		204,
+		212,
+	}
+}
+
 type moduledata_1_19_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -1660,6 +2586,44 @@ func (md moduledata_1_19_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_19_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		336,
+		360,
+		384,
+		408,
+		424,
 	}
 }
 
@@ -1727,6 +2691,46 @@ func (md moduledata_1_20_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_20_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		176,
+		188,
+		200,
+		212,
+		220,
+	}
+}
+
 type moduledata_1_20_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -1788,6 +2792,46 @@ func (md moduledata_1_20_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_20_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		352,
+		376,
+		400,
+		424,
+		440,
 	}
 }
 
@@ -1856,6 +2900,47 @@ func (md moduledata_1_21_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_21_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		176,
+		188,
+		200,
+		212,
+		220,
+		232,
+	}
+}
+
 type moduledata_1_21_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -1918,6 +3003,47 @@ func (md moduledata_1_21_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_21_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		352,
+		376,
+		400,
+		424,
+		440,
+		464,
 	}
 }
 
@@ -1986,6 +3112,47 @@ func (md moduledata_1_22_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_22_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		176,
+		188,
+		200,
+		212,
+		220,
+		232,
+	}
+}
+
 type moduledata_1_22_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -2048,6 +3215,47 @@ func (md moduledata_1_22_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_22_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		352,
+		376,
+		400,
+		424,
+		440,
+		464,
 	}
 }
 
@@ -2116,6 +3324,47 @@ func (md moduledata_1_23_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_23_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		176,
+		188,
+		200,
+		212,
+		220,
+		232,
+	}
+}
+
 type moduledata_1_23_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -2178,6 +3427,47 @@ func (md moduledata_1_23_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_23_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		352,
+		376,
+		400,
+		424,
+		440,
+		464,
 	}
 }
 
@@ -2246,6 +3536,47 @@ func (md moduledata_1_24_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_24_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		176,
+		188,
+		200,
+		212,
+		220,
+		232,
+	}
+}
+
 type moduledata_1_24_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -2308,6 +3639,47 @@ func (md moduledata_1_24_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_24_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		352,
+		376,
+		400,
+		424,
+		440,
+		464,
 	}
 }
 
@@ -2376,6 +3748,47 @@ func (md moduledata_1_25_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_25_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		176,
+		188,
+		200,
+		212,
+		220,
+		232,
+	}
+}
+
 type moduledata_1_25_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -2438,6 +3851,47 @@ func (md moduledata_1_25_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_25_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		352,
+		376,
+		400,
+		424,
+		440,
+		464,
 	}
 }
 
@@ -2507,6 +3961,48 @@ func (md moduledata_1_26_32) toModuledata() moduledata {
 	}
 }
 
+func (md moduledata_1_26_32) pointerOffsets() []int {
+	return []int{
+		0,
+		4,
+		16,
+		28,
+		40,
+		52,
+		64,
+		76,
+		80,
+		84,
+		88,
+		92,
+		96,
+		100,
+		104,
+		108,
+		112,
+		116,
+		120,
+		124,
+		128,
+		132,
+		136,
+		140,
+		144,
+		148,
+		152,
+		156,
+		160,
+		164,
+		168,
+		180,
+		192,
+		204,
+		216,
+		224,
+		236,
+	}
+}
+
 type moduledata_1_26_64 struct {
 	PcHeader                                    uint64
 	Funcnametab, Funcnametablen, Funcnametabcap uint64
@@ -2570,6 +4066,48 @@ func (md moduledata_1_26_64) toModuledata() moduledata {
 		PCLNTabAddr:   md.Pclntable,
 		PCLNTabLen:    md.Pclntablelen,
 		GoFuncVal:     md.Gofunc,
+	}
+}
+
+func (md moduledata_1_26_64) pointerOffsets() []int {
+	return []int{
+		0,
+		8,
+		32,
+		56,
+		80,
+		104,
+		128,
+		152,
+		160,
+		168,
+		176,
+		184,
+		192,
+		200,
+		208,
+		216,
+		224,
+		232,
+		240,
+		248,
+		256,
+		264,
+		272,
+		280,
+		288,
+		296,
+		304,
+		312,
+		320,
+		328,
+		336,
+		360,
+		384,
+		408,
+		432,
+		448,
+		472,
 	}
 }
 
