@@ -71,11 +71,14 @@ func getTypes(fileInfo *FileInfo, f fileHandler, md moduledata) (map[uint64]*GoT
 	}
 
 	// New parser
-	parser := newTypeParser(types, md.Types().Address, fileInfo)
+	typesAddr := md.Types().Address
+	resolver := newPointerResolver(f)
+	parser := newTypeParser(types, typesAddr, fileInfo, f, resolver)
 	for _, off := range typeLink {
-		typ, err := parser.parseType(uint64(off) + parser.base)
-		if err != nil || typ == nil {
-			return nil, fmt.Errorf("failed to parse type at offset 0x%x: %w", off, err)
+		_, err := parser.parseType(uint64(off) + parser.base)
+		if err != nil {
+			// Skip individual type parse failures rather than aborting all types.
+			continue
 		}
 	}
 	return parser.parsedTypes(), nil
