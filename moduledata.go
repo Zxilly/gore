@@ -57,6 +57,11 @@ type Moduledata interface {
 	TypeLinkData() ([]int32, error)
 	// GoFuncValue returns the value of the 'go:func.*' symbol.
 	GoFuncValue() uint64
+	// ResolvePointer resolves a pointer value read from fileAddr in the binary.
+	// On PIE binaries (Mach-O chained fixups, ELF RELATIVE relocations), raw
+	// pointer values in data sections are fixup descriptors, not actual addresses.
+	// Returns the resolved address, or val unchanged for non-PIE binaries.
+	ResolvePointer(val uint64, fileAddr uint64) uint64
 }
 
 type moduledata struct {
@@ -74,7 +79,8 @@ type moduledata struct {
 
 	GoFuncVal uint64
 
-	fh fileHandler
+	fh       fileHandler
+	resolver pointerResolver
 }
 
 // Text returns the text section.
@@ -194,6 +200,11 @@ func (m moduledata) TypeLinkData() ([]int32, error) {
 // GoFuncValue returns the value of the "go:func.*" symbol.
 func (m moduledata) GoFuncValue() uint64 {
 	return m.GoFuncVal
+}
+
+// ResolvePointer resolves a pointer value read from fileAddr in the binary.
+func (m moduledata) ResolvePointer(val uint64, fileAddr uint64) uint64 {
+	return resolvePointer(m.resolver, val, fileAddr)
 }
 
 // ModuleDataSection is a section defined in the Moduledata structure.
@@ -382,8 +393,8 @@ load:
 		goto search
 	}
 
-	// Add the file handler.
 	md.fh = f.fh
+	md.resolver = resolver
 
 	return md, nil
 }

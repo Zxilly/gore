@@ -44,38 +44,6 @@ func resolvePointer(r pointerResolver, val uint64, fileAddr uint64) uint64 {
 	return r.ResolvePointer(val, fileAddr)
 }
 
-// resolveBuffer resolves all word-sized slots in data where the resolver
-// unambiguously changes the value (i.e., raw != resolved). Used for moduledata
-// where fields mix pointers and non-pointer integers. Returns a new buffer.
-func resolveBuffer(r *machoResolver, data []byte, baseAddr uint64, wordSize int, order binary.ByteOrder) []byte {
-	if r == nil {
-		return data
-	}
-	resolved := make([]byte, len(data))
-	copy(resolved, data)
-	for i := 0; i+wordSize <= len(data); i += wordSize {
-		var raw uint64
-		if wordSize == 4 {
-			raw = uint64(order.Uint32(data[i:]))
-		} else {
-			raw = order.Uint64(data[i:])
-		}
-		val, err := r.mf.GetSlidPointerAtAddress(baseAddr + uint64(i))
-		if err != nil || val == raw {
-			continue
-		}
-		if val < r.imageBase {
-			val += r.imageBase
-		}
-		if wordSize == 4 {
-			order.PutUint32(resolved[i:], uint32(val))
-		} else {
-			order.PutUint64(resolved[i:], val)
-		}
-	}
-	return resolved
-}
-
 // findPointerValue scans word-sized slots looking for one resolving to targetAddr.
 func findPointerValue(r pointerResolver, secAddr uint64, secData []byte, targetAddr uint64, wordSize int, order binary.ByteOrder) int {
 	if r == nil {
