@@ -41,15 +41,25 @@ type GoVersion struct {
 	Timestamp string
 }
 
+// stripVersionSuffix removes GOEXPERIMENT suffixes from Go version strings.
+// Go ≤ 1.25 uses space: "go1.23.11 X:nocoverageredesign"
+// Go ≥ 1.26 uses hyphen: "go1.26.0-X:jsonv2"
+// Dev builds may use both: "go1.27-abc X:foo"
+func stripVersionSuffix(v string) string {
+	v, _, _ = strings.Cut(v, " ")
+	v, _, _ = strings.Cut(v, "-")
+	return v
+}
+
 // ResolveGoVersion tries to return the GoVersion for the given tag.
 // For example the tag: go1 will return a GoVersion struct representing version 1.0 of the compiler.
-// It also handles GOEXPERIMENT suffixes like "go1.26.0-X:jsonv2" by stripping the suffix.
+// It handles GOEXPERIMENT suffixes (both space and hyphen separated) by stripping them.
 // If no goversion for the given tag is found, nil is returned.
 func ResolveGoVersion(tag string) *GoVersion {
 	if v, ok := goversions[tag]; ok {
 		return v
 	}
-	if base, _, hasSuffix := strings.Cut(tag, "-"); hasSuffix {
+	if base := stripVersionSuffix(tag); base != tag {
 		if v, ok := goversions[base]; ok {
 			return v
 		}
@@ -65,10 +75,12 @@ func GoVersionCompare(a, b string) int {
 	if a == b {
 		return 0
 	}
-	if !version.IsValid(a) || !version.IsValid(b) {
+	cleanA := stripVersionSuffix(a)
+	cleanB := stripVersionSuffix(b)
+	if !version.IsValid(cleanA) || !version.IsValid(cleanB) {
 		return strings.Compare(a, b)
 	}
-	return version.Compare(a, b)
+	return version.Compare(cleanA, cleanB)
 }
 
 func findGoCompilerVersion(f *GoFile) (*GoVersion, error) {
@@ -78,7 +90,7 @@ func findGoCompilerVersion(f *GoFile) (*GoVersion, error) {
 			return ver, nil
 		}
 		// Unknown version but DWARF had a value — return it as-is
-		if stripped, _, _ := strings.Cut(dwarfVer, "-"); stripped != "" {
+		if stripped := stripVersionSuffix(dwarfVer); stripped != "" {
 			return &GoVersion{Name: stripped}, nil
 		}
 	}

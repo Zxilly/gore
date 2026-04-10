@@ -255,9 +255,9 @@ func pickVersionedModuleData(info *FileInfo) (modulable, error) {
 		return nil, ErrNoGoVersionFound
 	}
 
-	name := info.goversion.Name
+	name := stripVersionSuffix(info.goversion.Name)
 	if !version.IsValid(name) {
-		return nil, errors.New("could not parse the go version " + name)
+		return nil, errors.New("could not parse the go version " + info.goversion.Name)
 	}
 
 	lang := version.Lang(name) // e.g. "go1.26"
