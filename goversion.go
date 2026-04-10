@@ -22,12 +22,11 @@ package gore
 import (
 	"bytes"
 	"errors"
+	"go/version"
 	"regexp"
+	"strings"
 
 	"golang.org/x/arch/x86/x86asm"
-
-	"github.com/goretk/gore/extern"
-	"github.com/goretk/gore/extern/gover"
 )
 
 var goVersionMatcher = regexp.MustCompile(`(go[\d+.]*(beta|rc)?[\d*])`)
@@ -44,13 +43,18 @@ type GoVersion struct {
 
 // ResolveGoVersion tries to return the GoVersion for the given tag.
 // For example the tag: go1 will return a GoVersion struct representing version 1.0 of the compiler.
+// It also handles GOEXPERIMENT suffixes like "go1.26.0-X:jsonv2" by stripping the suffix.
 // If no goversion for the given tag is found, nil is returned.
 func ResolveGoVersion(tag string) *GoVersion {
-	v, ok := goversions[tag]
-	if !ok {
-		return nil
+	if v, ok := goversions[tag]; ok {
+		return v
 	}
-	return v
+	if base, _, hasSuffix := strings.Cut(tag, "-"); hasSuffix {
+		if v, ok := goversions[base]; ok {
+			return v
+		}
+	}
+	return nil
 }
 
 // GoVersionCompare compares two version strings.
@@ -61,16 +65,21 @@ func GoVersionCompare(a, b string) int {
 	if a == b {
 		return 0
 	}
-	a = extern.StripGo(a)
-	b = extern.StripGo(b)
-	return gover.Compare(a, b)
+	if !version.IsValid(a) || !version.IsValid(b) {
+		return strings.Compare(a, b)
+	}
+	return version.Compare(a, b)
 }
 
 func findGoCompilerVersion(f *GoFile) (*GoVersion, error) {
 	// if DWARF debug info exists, then this can simply be obtained from there
-	if gover, ok := getBuildVersionFromDwarf(f.fh); ok {
-		if ver := ResolveGoVersion(gover); ver != nil {
+	if dwarfVer, ok := getBuildVersionFromDwarf(f.fh); ok {
+		if ver := ResolveGoVersion(dwarfVer); ver != nil {
 			return ver, nil
+		}
+		// Unknown version but DWARF had a value — return it as-is
+		if stripped, _, _ := strings.Cut(dwarfVer, "-"); stripped != "" {
+			return &GoVersion{Name: stripped}, nil
 		}
 	}
 
@@ -221,29 +230,37 @@ disasm:
 			continue
 		}
 
+		// Try two strategies:
+		// 1. Classic (Go <= 1.25): LEA loads pointer to string header {data_ptr, len}.
+		// 2. New (Go 1.26+): LEA loads pointer to string content directly
+		//    (e.g. LEAQ go:string.*+offset(SB), AX).
+		var bstr []byte
+
+		// Strategy 1: interpret as string header.
 		r := bytes.NewReader(b)
 		ptr, err := readUIntTo64(r, f.FileInfo.ByteOrder, is32)
-		if err != nil {
-			// Probably not the right instruction, so go to next.
-			continue
-		}
-		l, err := readUIntTo64(r, f.FileInfo.ByteOrder, is32)
-		if err != nil {
-			// Probably not the right instruction, so go to next.
-			continue
+		if err == nil {
+			l, err := readUIntTo64(r, f.FileInfo.ByteOrder, is32)
+			if err == nil && l > 0 && l < 1024 {
+				bstr, _ = f.Bytes(ptr, l)
+			}
 		}
 
-		bstr, _ := f.Bytes(ptr, l)
-		if bstr == nil {
-			continue
+		// Strategy 2: LEA target is the string content itself.
+		if !bytes.HasPrefix(bstr, []byte("go1.")) {
+			bstr = b
 		}
 
 		if !bytes.HasPrefix(bstr, []byte("go1.")) {
 			continue
 		}
 
-		// Likely the version string.
-		ver := string(bstr)
+		// Extract just the version part (stop at first non-version byte).
+		ver := string(goVersionMatcher.Find(bstr))
+		if ver == "" {
+			continue
+		}
+		ver, _, _ = strings.Cut(ver, "-")
 
 		resolvedVer := ResolveGoVersion(ver)
 		if resolvedVer != nil {
