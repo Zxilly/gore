@@ -105,7 +105,10 @@ const moduleDataHeader = `
 
 package gore
 
-import "fmt"
+import (
+	"fmt"
+	"sort"
+)
 
 `
 

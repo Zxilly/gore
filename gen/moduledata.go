@@ -20,18 +20,18 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/goretk/gore/extern"
-	"github.com/goretk/gore/extern/gover"
 	"go/ast"
 	"go/format"
 	"go/parser"
 	"go/token"
+	"go/version"
 	"os"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 func getMaxVersionBit() (int, error) {
@@ -53,15 +53,16 @@ func getMaxVersionBit() (int, error) {
 			continue
 		}
 
-		knownVersionSlice = append(knownVersionSlice, extern.StripGo(ver))
+		knownVersionSlice = append(knownVersionSlice, ver)
 	}
 	sort.Slice(knownVersionSlice, func(i, j int) bool {
-		return gover.Compare(knownVersionSlice[i], knownVersionSlice[j]) < 0
+		return version.Compare(knownVersionSlice[i], knownVersionSlice[j]) < 0
 	})
 
 	latest := knownVersionSlice[len(knownVersionSlice)-1]
+	lang := version.Lang(latest) // e.g. "go1.26"
 
-	maxMinor, err := strconv.Atoi(strings.Split(latest, ".")[1])
+	maxMinor, err := strconv.Atoi(lang[len("go1."):])
 	if err != nil {
 		return 0, fmt.Errorf("error when getting latest go version: %w, %s", err, latest)
 	}
@@ -78,35 +79,33 @@ func getCurrentMaxGoBit() (int, error) {
 
 	file, err := parser.ParseFile(token.NewFileSet(), "", contents, 0)
 	if err != nil {
-		return 0, err
+		return 0, nil
 	}
 
-	currentVersion := 5 // ignore version <= 1.5
+	currentVersion := 5
 
-	// get all struct type names
 	for _, decl := range file.Decls {
-		if genDecl, ok := decl.(*ast.GenDecl); ok {
-			for _, spec := range genDecl.Specs {
-				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
-					if _, ok := typeSpec.Type.(*ast.StructType); ok {
-						name := typeSpec.Name.Name
-
-						if moduleNameMatcher.MatchString(name) {
-							matches := moduleNameMatcher.FindStringSubmatch(name)
-							if len(matches) != 2 {
-								return 0, fmt.Errorf("error when parsing moduledata.go, matches: %v", matches)
-							}
-
-							version, err := strconv.Atoi(matches[1])
-							if err != nil {
-								return 0, fmt.Errorf("error when parsing moduledata.go, version: %v", matches[1])
-							}
-
-							currentVersion = max(currentVersion, version)
-						}
-					}
-				}
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok {
+			continue
+		}
+		for _, spec := range genDecl.Specs {
+			typeSpec, ok := spec.(*ast.TypeSpec)
+			if !ok {
+				continue
 			}
+			if _, ok := typeSpec.Type.(*ast.StructType); !ok {
+				continue
+			}
+			matches := moduleNameMatcher.FindStringSubmatch(typeSpec.Name.Name)
+			if len(matches) != 2 {
+				continue
+			}
+			v, err := strconv.Atoi(matches[1])
+			if err != nil {
+				continue
+			}
+			currentVersion = max(currentVersion, v)
 		}
 	}
 	return currentVersion, nil
@@ -200,20 +199,30 @@ func (g *moduleDataGenerator) add(versionCode int, code string) error {
 }
 
 func (g *moduleDataGenerator) writeSelector() {
-	g.writeln("func selectModuleData(v int, bits int) (modulable,error) {")
-	g.writeln("switch {")
-
-	for _, versionCode := range g.knownVersions {
-		for _, bits := range []int{32, 64} {
-			g.writeln("case v == %d && bits == %d:", versionCode, bits)
-			g.writeln("return &%s{}, nil", g.generateTypeName(versionCode, bits))
+	for _, bits := range []int{32, 64} {
+		g.writeln("var moduledataVersions_%d = []struct{ minVersion int; factory func() modulable }{", bits)
+		for _, vc := range g.knownVersions {
+			g.writeln("{%d, func() modulable { return &%s{} }},", vc, g.generateTypeName(vc, bits))
 		}
+		g.writeln("}")
+		g.writeln("")
 	}
+
+	g.writeln("func selectModuleData(v int, bits int) (modulable, error) {")
+	g.writeln("var versions []struct{ minVersion int; factory func() modulable }")
+	g.writeln("switch bits {")
+	g.writeln("case 32: versions = moduledataVersions_32")
+	g.writeln("case 64: versions = moduledataVersions_64")
 	g.writeln("default:")
+	g.writeln(`return nil, fmt.Errorf("unsupported bits %%d", bits)`)
+	g.writeln("}")
+	g.writeln("idx := sort.Search(len(versions), func(i int) bool { return versions[i].minVersion > v }) - 1")
+	g.writeln("if idx < 0 {")
 	g.writeln(`return nil, fmt.Errorf("unsupported version %%d and bits %%d", v, bits)`)
-
-	g.writeln("}\n}\n")
-
+	g.writeln("}")
+	g.writeln("return versions[idx].factory(), nil")
+	g.writeln("}")
+	g.writeln("")
 }
 
 func (*moduleDataGenerator) generateTypeName(versionCode int, bits int) string {
@@ -401,6 +410,40 @@ func (g *moduleDataGenerator) writeVersionedModuleData(versionCode int, code str
 	return nil
 }
 
+// structLayout extracts the binary layout fingerprint from a moduledata struct
+// source. Two versions with the same fingerprint produce identical generated structs.
+func structLayout(code string) (string, error) {
+	expr, err := parser.ParseExpr(code)
+	if err != nil {
+		return "", err
+	}
+	structExpr, ok := expr.(*ast.StructType)
+	if !ok {
+		return "", fmt.Errorf("not a struct expression")
+	}
+
+	var buf strings.Builder
+	for _, field := range structExpr.Fields.List {
+		if len(field.Names) == 0 {
+			continue
+		}
+		for _, name := range field.Names {
+			if name.Name == "modulename" {
+				return buf.String(), nil
+			}
+			switch t := field.Type.(type) {
+			case *ast.StarExpr:
+				fmt.Fprintf(&buf, "%s ptr\n", name.Name)
+			case *ast.ArrayType:
+				fmt.Fprintf(&buf, "%s slice\n", name.Name)
+			case *ast.Ident:
+				fmt.Fprintf(&buf, "%s %s\n", name.Name, t.Name)
+			}
+		}
+	}
+	return buf.String(), nil
+}
+
 func generateModuleData() {
 	fmt.Println("Generating " + moduleDataOutputFile)
 
@@ -423,11 +466,21 @@ func generateModuleData() {
 
 	sort.Ints(versionCodes)
 
+	// Deduplicate: only generate a new struct when the parsed layout changes.
+	var prevLayout string
 	for _, versionCode := range versionCodes {
+		layout, err := structLayout(sources[versionCode])
+		if err != nil {
+			panic(err)
+		}
+		if layout == prevLayout {
+			continue
+		}
 		err = g.add(versionCode, sources[versionCode])
 		if err != nil {
 			panic(err)
 		}
+		prevLayout = layout
 	}
 
 	g.writeSelector()

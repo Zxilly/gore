@@ -24,11 +24,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"go/version"
 	"io"
 	"strconv"
-
-	"github.com/goretk/gore/extern"
-	"github.com/goretk/gore/extern/gover"
 )
 
 // Moduledata holds information about the layout of the executable image in memory.
@@ -257,13 +255,17 @@ func pickVersionedModuleData(info *FileInfo) (modulable, error) {
 		return nil, ErrNoGoVersionFound
 	}
 
-	ver := gover.Parse(extern.StripGo(info.goversion.Name))
-	zero := gover.Version{}
-	if ver == zero {
-		return nil, errors.New("could not parse the go version " + info.goversion.Name)
+	name := info.goversion.Name
+	if !version.IsValid(name) {
+		return nil, errors.New("could not parse the go version " + name)
 	}
 
-	verBit, err := strconv.Atoi(ver.Minor)
+	lang := version.Lang(name) // e.g. "go1.26"
+	if len(lang) <= len("go1.") {
+		return nil, errors.New("could not parse minor version from " + name)
+	}
+
+	verBit, err := strconv.Atoi(lang[len("go1."):])
 	if err != nil {
 		return nil, err
 	}
