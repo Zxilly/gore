@@ -15,6 +15,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+//go:build gore_agpl
+
 package gore
 
 import (
@@ -27,6 +29,15 @@ import (
 
 	"golang.org/x/arch/x86/x86asm"
 )
+
+// GetGoRoot returns the Go Root path used to compile the binary.
+func (f *GoFile) GetGoRoot() (string, error) {
+	err := f.initPackages()
+	if err != nil {
+		return "", err
+	}
+	return findGoRootPath(f)
+}
 
 func tryFromGOROOT(f *GoFile) (string, error) {
 	// Check for non-supported architectures.

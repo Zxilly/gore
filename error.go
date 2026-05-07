@@ -35,4 +35,8 @@ var (
 	ErrInvalidGoVersion = errors.New("invalid go version")
 	// ErrNoGoRootFound is returned if no goroot was found in the binary.
 	ErrNoGoRootFound = errors.New("no goroot found")
+	// ErrNotAGPLBuild is returned for a functionality that is not supported in the BSD licensed
+	// version of this library. To use this functionality, compile using the build tag "gore_agpl"
+	// to enabled the AGPL licensed code.
+	ErrNotAGPLBuild = errors.New("not a AGPL build")
 )
