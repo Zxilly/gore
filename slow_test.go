@@ -2,6 +2,9 @@
 //
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
+
+//go:build slow_test
+
 package gore
 
 import (
@@ -26,7 +29,7 @@ var dynResources = []struct {
 	{"linux", "amd64"},
 	{"windows", "386"},
 	{"windows", "amd64"},
-	{"darwin", "amd64"},
+	{"darwin", "arm64"},
 }
 
 var dynResourceFiles *testFiles

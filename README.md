@@ -29,8 +29,7 @@ typs, err := f.GetTypes()
 
 ## Update get new Go release information
 
-Instead of downloading new release of the library to get detection for new Go
-releases, it is possible to do a local pull.
+Instead of downloading a new library release for Go version detection, you can perform a local pull.
 
 Run `go generate` and new compiler releases will be generated from the git tags.
 
@@ -66,16 +65,16 @@ all at the moment.
 ## Licensing and Compatibility
 
 ### License
-The `gore` library is licensed under the BSD License.
+Most of the `gore` library files are licensed under the BSD License. A few
+features, however, are licensed under AGPL (Affero General Public License).
+These features include the use of DWARF information and the extraction of the
+`GOROOT`. 
 
-### AGPL Components
-Please note that specific features, including the use of DWARF information and
-the extraction of `GOROOT`, are licensed under the AGPL (Affero General Public
-License).
+### Using GORE under BSD license
+It's possible to compile GORE with only the BSD code so it can be distributed
+under the BSD license. Compiling with the build tag `gore_bsd` will only enable
+BSD licensed code. The resulting binary can be distributed under any BSD
+compatible license.
 
-To use the components licensed under the AGPL, you must compile the library with
-the build tag `gore_agpl`.
-
-### Deprecation Notice
-We plan to drop support for the code components licensed under AGPL in the next
-minor version. Please plan your architecture accordingly.
+Building a Go binary without this build tag will include the AGPL licensed code.
+This means the resulting binary must be licensed under AGPL too.

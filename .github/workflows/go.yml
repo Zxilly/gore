@@ -30,9 +30,9 @@ jobs:
       shell: bash
       run: go test -timeout 1800s -v -race -coverprofile=coverage.txt -covermode=atomic -tags slow_test
 
-    - name: Test AGPL Version
-      shell: bash
-      run: go test -timeout 1800s -v -race -tags=slow_test,gore_agpl
+      - name: Test BSD Version
+        shell: bash
+        run: go test -timeout 1800s -v -race -tags=slow_test,gore_bsd
 
     - name: Upload coverage
       uses: codecov/codecov-action@v3
