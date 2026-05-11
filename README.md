@@ -29,40 +29,53 @@ typs, err := f.GetTypes()
 
 ## Update get new Go release information
 
-Instead of downloading new release of the library to get detection
-for new Go releases, it is possible to do a local pull.
+Instead of downloading new release of the library to get detection for new Go
+releases, it is possible to do a local pull.
 
-Run `go generate` and new compiler releases will be generated from
-the git tags.
+Run `go generate` and new compiler releases will be generated from the git tags.
 
 ## Functionality
 
 ### Go compiler
 
-The library has functionality for guessing the compiler version
-used. It searches the binary for the identifiable string left
-by the compiler. It is not perfect, so functionality for assuming
-a specific version is also provided. The version strings used are
-identical to the identifiers. For example version "1.10.1" is
-represented as "go1.10.1" and version "1.10" is represented as
+The library has functionality for guessing the compiler version used. It
+searches the binary for the identifiable string left by the compiler. It is not
+perfect, so functionality for assuming a specific version is also provided. The
+version strings used are identical to the identifiers. For example version
+"1.10.1" is represented as "go1.10.1" and version "1.10" is represented as
 "go1.10"
 
 ### Function recovery
 
-Function information is recovered from the pclntab. Information
-that is recovered includes: function start and end location in
-the text section, source file. The library also tries to estimate
-the first and last line number in the source file for the function.
-The methods recovered includes the receiver. All functions and
-methods belong to a package. The library tries to classify the
-type of package. If it is a standard library package, 3rd-party
-package, or part of the main application. If it unable to classify
-the package, it is classified as unknown.
+Function information is recovered from the pclntab. Information that is
+recovered includes: function start and end location in the text section, source
+file. The library also tries to estimate the first and last line number in the
+source file for the function. The methods recovered includes the receiver. All
+functions and methods belong to a package. The library tries to classify the
+type of package. If it is a standard library package, 3rd-party package, or part
+of the main application. If it unable to classify the package, it is classified
+as unknown.
 
 ### Type recovery
 
-The types in the binary are parsed from the "typelink" list. Not
-all versions of Go are supported equally. Versions 1.7 and later
-are fully supported. Versions 1.5 and 1.6 are partially supported.
-Version prior to 1.5 are not supported at all at the moment.
+The types in the binary are parsed from the "typelink" list. Not all versions of
+Go are supported equally. Versions 1.7 and later are fully supported. Versions
+1.5 and 1.6 are partially supported. Version prior to 1.5 are not supported at
+all at the moment.
 
+## Licensing and Compatibility
+
+### License
+The `gore` library is licensed under the BSD License.
+
+### AGPL Components
+Please note that specific features, including the use of DWARF information and
+the extraction of `GOROOT`, are licensed under the AGPL (Affero General Public
+License).
+
+To use the components licensed under the AGPL, you must compile the library with
+the build tag `gore_agpl`.
+
+### Deprecation Notice
+We plan to drop support for the code components licensed under AGPL in the next
+minor version. Please plan your architecture accordingly.
