@@ -2,9 +2,9 @@ name: Build and tests
 
 on:
   push:
-    branches: [ develop, master ]
+    branches: [develop, master]
   pull_request:
-    branches: [ develop, master ]
+    branches: [develop, master]
 
 jobs:
   build_and_tests:
@@ -13,22 +13,26 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: true
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
 
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        check-latest: true
-        go-version: "stable"
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          check-latest: true
+          go-version: "stable"
 
-    - name: Build
-      run: go build -o a
+      - name: Build
+        run: go build -o a
 
-    - name: Test
-      shell: bash
-      run: go test -timeout 1800s -v -race -coverprofile=coverage.txt -covermode=atomic -tags slow_test
+      - name: Test
+        shell: bash
+        run: go test -timeout 1800s -v -race -coverprofile=coverage.txt -covermode=atomic -tags slow_test
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
+      - name: Test BSD Version
+        shell: bash
+        run: go test -timeout 1800s -v -race -tags=slow_test,gore_bsd
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
