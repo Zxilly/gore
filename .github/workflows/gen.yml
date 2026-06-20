@@ -2,28 +2,28 @@ name: "Auto generate sources"
 
 on:
   schedule:
-    - cron: '0 7 * * *'
+    - cron: "0 7 * * *"
   workflow_dispatch:
 
 jobs:
   autogen:
     name: Auto generate sources
-    runs-on: 'ubuntu-latest'
+    runs-on: "ubuntu-latest"
     permissions:
       contents: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
-          fetch-depth: 0  # Needed for "git describe"
+          fetch-depth: 0 # Needed for "git describe"
 
       - name: Checkout GoLang repository
         run: |
           git clone --progress --no-checkout https://github.com/golang/go.git ${{ runner.temp }}/go
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           check-latest: true
           go-version: "stable"
@@ -33,7 +33,7 @@ jobs:
           go generate ./...
         env:
           GORE_GO_REPO: ${{ runner.temp }}/go
-      
+
       - name: Commit changes if any and push a new tag
         run: |
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -49,4 +49,3 @@ jobs:
           else
             echo "::notice::Generated files are up to date."
           fi
-
