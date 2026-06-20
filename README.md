@@ -67,8 +67,8 @@ all at the moment.
 ### License
 Most of the `gore` library files are licensed under the BSD License. A few
 features, however, are licensed under AGPL (Affero General Public License).
-These features include the use of DWARF information and the extraction of the
-`GOROOT`. 
+These features include:
+- Extraction of `GOROOT`. 
 
 ### Using GORE under BSD license
 It's possible to compile GORE with only the BSD code so it can be distributed
