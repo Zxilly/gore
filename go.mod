@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/blacktop/go-macho v1.1.257
+	github.com/eliben/watgo v0.8.0
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/arch v0.23.0
