@@ -1,6 +1,6 @@
 module github.com/goretk/gore
 
-go 1.25.0
+go 1.26.1
 
 require (
 	github.com/blacktop/go-macho v1.1.257
