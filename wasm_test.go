@@ -50,6 +50,22 @@ func testWasmOpen(t *testing.T, goos string) {
 	require.NotNil(t, version)
 	require.True(t, goversion.IsValid(version.Name), "invalid Go version %q", version.Name)
 
+	require.NotNil(t, file.BuildInfo)
+	require.NotNil(t, file.BuildInfo.ModInfo)
+	require.Equal(t, version.Name, file.BuildInfo.ModInfo.GoVersion)
+
+	packages, err := file.GetPackages()
+	require.NoError(t, err)
+	require.NotEmpty(t, packages)
+
+	standardLibrary, err := file.GetSTDLib()
+	require.NoError(t, err)
+	require.NotEmpty(t, standardLibrary)
+
+	types, err := file.GetTypes()
+	require.NoError(t, err)
+	require.NotEmpty(t, types)
+
 	parsed, ok := file.GetParsedFile().(WasmInfo)
 	require.True(t, ok)
 	require.NotNil(t, parsed.Module)

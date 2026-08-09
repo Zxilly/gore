@@ -411,6 +411,13 @@ func (f *GoFile) initPclntab() error {
 		f.pclntabAddr = addr
 		f.pclntabBytes = data
 
+		// Go's WebAssembly pclntab uses function indices directly and does not
+		// have a runtime.text address in linear memory.
+		if f.FileInfo.Arch == ArchWASM {
+			f.runtimeText = 0
+			return
+		}
+
 		// All the function address in the pclntab uses the symbol "runtime.text" as the base address.
 		// This symbol is where the runtime uses as the start of the code section. While it should always
 		// be located within the binary's text section, it may not be at the start of the section. For example,

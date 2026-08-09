@@ -282,6 +282,7 @@ func extractModuledata(f *GoFile) (moduledata, error) {
 	if err != nil {
 		return moduledata{}, err
 	}
+	secSize := uint64(len(secData))
 
 	// if we can get the moduledata addr from the symbol, we have no need to search
 	sym, err := f.fh.getSymbol("runtime.firstmoduledata")
@@ -365,6 +366,22 @@ load:
 
 	md := vmd.toModuledata()
 
+	// WebAssembly code addresses are function indices rather than ranges in
+	// linear memory, so the native text-section validation does not apply. The
+	// pclntab, types, and typelinks still have to point into linear memory; use
+	// those ranges to reject false matches for the pclntab pointer.
+	if f.FileInfo.Arch == ArchWASM {
+		if !validWasmModuledata(md, secSize) {
+			if fromSymbol {
+				return moduledata{}, errors.New("WebAssembly moduledata at symbol address failed memory validation")
+			}
+			secData = secData[off+1:]
+			goto search
+		}
+		md.fh = f.fh
+		return md, nil
+	}
+
 	// Take a simple validation step to ensure that the moduledata is valid.
 	text := md.TextAddr
 	etext := md.TextAddr + md.TextLen
@@ -386,6 +403,24 @@ load:
 	md.resolver = resolver
 
 	return md, nil
+}
+
+func validWasmModuledata(md moduledata, memorySize uint64) bool {
+	if md.PCLNTabLen == 0 || md.TypesLen == 0 || md.TypelinkLen == 0 {
+		return false
+	}
+	if !addressRangeWithin(md.PCLNTabAddr, md.PCLNTabLen, memorySize) ||
+		!addressRangeWithin(md.TypesAddr, md.TypesLen, memorySize) {
+		return false
+	}
+	if md.TypelinkLen > ^uint64(0)/4 {
+		return false
+	}
+	return addressRangeWithin(md.TypelinkAddr, md.TypelinkLen*4, memorySize)
+}
+
+func addressRangeWithin(address, length, limit uint64) bool {
+	return address <= limit && length <= limit-address
 }
 
 func readUIntTo64(r io.Reader, byteOrder binary.ByteOrder, is32bit bool) (addr uint64, err error) {
