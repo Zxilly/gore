@@ -28,6 +28,7 @@ var (
 	machoMagic2    = []byte{0xfe, 0xed, 0xfa, 0xcf}
 	machoMagic3    = []byte{0xce, 0xfa, 0xed, 0xfe}
 	machoMagic4    = []byte{0xcf, 0xfa, 0xed, 0xfe}
+	wasmMagic      = []byte{0x00, 0x61, 0x73, 0x6d}
 )
 
 // Open opens a file and returns a handler to the file.
@@ -73,6 +74,12 @@ func OpenReader(f io.ReaderAt) (*GoFile, error) {
 			return nil, err
 		}
 		gofile.fh = machO
+	} else if fileMagicMatch(buf, wasmMagic) {
+		wasm, err := openWasm(f)
+		if err != nil {
+			return nil, err
+		}
+		gofile.fh = wasm
 	} else {
 		return nil, ErrUnsupportedFile
 	}
@@ -606,4 +613,5 @@ const (
 	ArchARM64 = "arm64"
 	Arch386   = "i386"
 	ArchMIPS  = "mips"
+	ArchWASM  = "wasm"
 )
