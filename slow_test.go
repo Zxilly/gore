@@ -8,7 +8,9 @@
 package gore
 
 import (
+	"bytes"
 	"fmt"
+	goversion "go/version"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -155,6 +157,62 @@ func TestOpenAndCloseFile(t *testing.T) {
 		a.NotNil(f)
 		a.NoError(f.Close())
 	})
+}
+
+func TestWasmOpen(t *testing.T) {
+	for _, goos := range []string{"js", "wasip1"} {
+		t.Run(goos, func(t *testing.T) {
+			wasmPath := filepath.Join(t.TempDir(), "gore-test.wasm")
+			cmd := exec.Command("go", "build", "-o", wasmPath, "./testdata/wasm")
+			cmd.Env = append(os.Environ(), "GOOS="+goos, "GOARCH=wasm", "CGO_ENABLED=0")
+			output, err := cmd.CombinedOutput()
+			require.NoError(t, err, string(output))
+
+			file, err := Open(wasmPath)
+			require.NoError(t, err)
+			t.Cleanup(func() { require.NoError(t, file.Close()) })
+
+			require.Equal(t, ArchWASM, file.FileInfo.Arch)
+			require.Equal(t, goos, file.FileInfo.OS)
+			require.Equal(t, intSize64, file.FileInfo.WordSize)
+			require.NotEmpty(t, file.BuildID)
+
+			version, err := file.GetCompilerVersion()
+			require.NoError(t, err)
+			require.NotNil(t, version)
+			require.True(t, goversion.IsValid(version.Name), "invalid Go version %q", version.Name)
+
+			require.NotNil(t, file.BuildInfo)
+			require.NotNil(t, file.BuildInfo.ModInfo)
+			require.Equal(t, version.Name, file.BuildInfo.ModInfo.GoVersion)
+
+			packages, err := file.GetPackages()
+			require.NoError(t, err)
+			require.NotEmpty(t, packages)
+
+			standardLibrary, err := file.GetSTDLib()
+			require.NoError(t, err)
+			require.NotEmpty(t, standardLibrary)
+
+			types, err := file.GetTypes()
+			require.NoError(t, err)
+			require.NotEmpty(t, types)
+
+			parsed, ok := file.GetParsedFile().(WasmInfo)
+			require.True(t, ok)
+			require.NotNil(t, parsed.Module)
+			require.NotEmpty(t, parsed.Memory)
+
+			_, err = file.fh.getDwarf()
+			require.ErrorIs(t, err, ErrUnsupportedDwarf)
+
+			raw, err := os.ReadFile(wasmPath)
+			require.NoError(t, err)
+			readerFile, err := OpenReader(bytes.NewReader(raw))
+			require.NoError(t, err)
+			require.NoError(t, readerFile.Close())
+		})
+	}
 }
 
 func TestGetPackages(t *testing.T) {

@@ -52,16 +52,16 @@ func openWasm(r io.ReaderAt) (*wasmFile, error) {
 
 func buildWasmMemory(module *wasmir.Module) ([]byte, error) {
 	if module == nil || len(module.Memories) == 0 {
-		return nil, errors.New("WebAssembly module has no linear memory")
+		return nil, ErrWasmNoLinearMemory
 	}
 
 	minimumPages := module.Memories[0].Min
 	if minimumPages > maxWasmMemorySize/wasmPageSize {
-		return nil, fmt.Errorf("WebAssembly minimum memory size exceeds the %d-byte reconstruction limit", maxWasmMemorySize)
+		return nil, fmt.Errorf("%w: exceeds the %d-byte reconstruction limit", ErrWasmMemoryTooLarge, maxWasmMemorySize)
 	}
 	maxInt := int(^uint(0) >> 1)
 	if minimumPages > uint64(maxInt)/wasmPageSize {
-		return nil, errors.New("WebAssembly minimum memory size is too large")
+		return nil, ErrWasmMemoryTooLarge
 	}
 	memory := make([]byte, int(minimumPages*wasmPageSize))
 
@@ -97,19 +97,19 @@ func wasmConstExpression(module *wasmir.Module, expression []wasmir.Instruction,
 		switch instruction.Kind {
 		case wasmir.InstrI32Const:
 			if valueSet {
-				return 0, errors.New("constant expression produces multiple values")
+				return 0, ErrWasmConstExpressionMultipleValues
 			}
 			value = int64(instruction.I32Const)
 			valueSet = true
 		case wasmir.InstrI64Const:
 			if valueSet {
-				return 0, errors.New("constant expression produces multiple values")
+				return 0, ErrWasmConstExpressionMultipleValues
 			}
 			value = instruction.I64Const
 			valueSet = true
 		case wasmir.InstrGlobalGet:
 			if valueSet {
-				return 0, errors.New("constant expression produces multiple values")
+				return 0, ErrWasmConstExpressionMultipleValues
 			}
 			index := instruction.GlobalIndex
 			if int(index) >= len(module.Globals) {
@@ -141,7 +141,7 @@ func wasmConstExpression(module *wasmir.Module, expression []wasmir.Instruction,
 	}
 
 	if !valueSet {
-		return 0, errors.New("constant expression produces no value")
+		return 0, ErrWasmConstExpressionNoValue
 	}
 	return value, nil
 }
@@ -187,7 +187,7 @@ func (w *wasmFile) getSectionData(name string) (uint64, []byte, error) {
 func (w *wasmFile) getVersion() (*GoVersion, error) {
 	section := w.customSection("producers")
 	if section == nil {
-		return nil, errors.New("WebAssembly producers section does not exist")
+		return nil, ErrNoGoVersionFound
 	}
 
 	version, err := goVersionFromProducers(section)
@@ -231,7 +231,7 @@ func goVersionFromProducers(data []byte) (string, error) {
 		}
 	}
 
-	return "", errors.New("WebAssembly producers section has no Go language entry")
+	return "", ErrNoGoVersionFound
 }
 
 func readWasmName(r *bytes.Reader) (string, error) {
@@ -301,7 +301,7 @@ func (w *wasmFile) getParsedFile() any {
 }
 
 func (w *wasmFile) getDwarf() (*dwarf.Data, error) {
-	return nil, errors.New("DWARF is not supported for WebAssembly binaries")
+	return nil, ErrUnsupportedDwarf
 }
 
 func (w *wasmFile) customSection(name string) []byte {

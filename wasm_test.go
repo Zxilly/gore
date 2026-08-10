@@ -5,81 +5,12 @@
 package gore
 
 import (
-	"bytes"
 	"encoding/binary"
-	goversion "go/version"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"testing"
 
 	"github.com/eliben/watgo/wasmir"
 	"github.com/stretchr/testify/require"
 )
-
-func TestWasmOpen(t *testing.T) {
-	for _, goos := range []string{"js", "wasip1"} {
-		t.Run(goos, func(t *testing.T) {
-			testWasmOpen(t, goos)
-		})
-	}
-}
-
-func testWasmOpen(t *testing.T, goos string) {
-	if testing.Short() {
-		t.Skip("building a WebAssembly fixture")
-	}
-
-	wasmPath := filepath.Join(t.TempDir(), "gore-test.wasm")
-	cmd := exec.Command("go", "build", "-o", wasmPath, "./testdata/wasm")
-	cmd.Env = append(os.Environ(), "GOOS="+goos, "GOARCH=wasm", "CGO_ENABLED=0")
-	output, err := cmd.CombinedOutput()
-	require.NoError(t, err, string(output))
-
-	file, err := Open(wasmPath)
-	require.NoError(t, err)
-	t.Cleanup(func() { require.NoError(t, file.Close()) })
-
-	require.Equal(t, ArchWASM, file.FileInfo.Arch)
-	require.Equal(t, goos, file.FileInfo.OS)
-	require.Equal(t, intSize64, file.FileInfo.WordSize)
-	require.NotEmpty(t, file.BuildID)
-
-	version, err := file.GetCompilerVersion()
-	require.NoError(t, err)
-	require.NotNil(t, version)
-	require.True(t, goversion.IsValid(version.Name), "invalid Go version %q", version.Name)
-
-	require.NotNil(t, file.BuildInfo)
-	require.NotNil(t, file.BuildInfo.ModInfo)
-	require.Equal(t, version.Name, file.BuildInfo.ModInfo.GoVersion)
-
-	packages, err := file.GetPackages()
-	require.NoError(t, err)
-	require.NotEmpty(t, packages)
-
-	standardLibrary, err := file.GetSTDLib()
-	require.NoError(t, err)
-	require.NotEmpty(t, standardLibrary)
-
-	types, err := file.GetTypes()
-	require.NoError(t, err)
-	require.NotEmpty(t, types)
-
-	parsed, ok := file.GetParsedFile().(WasmInfo)
-	require.True(t, ok)
-	require.NotNil(t, parsed.Module)
-	require.NotEmpty(t, parsed.Memory)
-
-	_, err = file.fh.getDwarf()
-	require.ErrorContains(t, err, "DWARF is not supported for WebAssembly binaries")
-
-	raw, err := os.ReadFile(wasmPath)
-	require.NoError(t, err)
-	readerFile, err := OpenReader(bytes.NewReader(raw))
-	require.NoError(t, err)
-	require.NoError(t, readerFile.Close())
-}
 
 func TestBuildWasmMemory(t *testing.T) {
 	module := &wasmir.Module{
@@ -129,7 +60,24 @@ func TestBuildWasmMemoryRejectsExcessiveMinimum(t *testing.T) {
 	}
 
 	_, err := buildWasmMemory(module)
-	require.ErrorContains(t, err, "reconstruction limit")
+	require.ErrorIs(t, err, ErrWasmMemoryTooLarge)
+}
+
+func TestBuildWasmMemoryRequiresLinearMemory(t *testing.T) {
+	_, err := buildWasmMemory(&wasmir.Module{})
+	require.ErrorIs(t, err, ErrWasmNoLinearMemory)
+}
+
+func TestWasmConstExpressionErrors(t *testing.T) {
+	module := &wasmir.Module{}
+	_, err := wasmConstExpression(module, []wasmir.Instruction{
+		{Kind: wasmir.InstrI32Const},
+		{Kind: wasmir.InstrI64Const},
+	}, 0, nil)
+	require.ErrorIs(t, err, ErrWasmConstExpressionMultipleValues)
+
+	_, err = wasmConstExpression(module, []wasmir.Instruction{{Kind: wasmir.InstrEnd}}, 0, nil)
+	require.ErrorIs(t, err, ErrWasmConstExpressionNoValue)
 }
 
 func TestGoVersionFromProducers(t *testing.T) {
@@ -149,6 +97,20 @@ func TestGoVersionFromProducers(t *testing.T) {
 	version, err := goVersionFromProducers(data)
 	require.NoError(t, err)
 	require.Equal(t, "go1.26.1", version)
+}
+
+func TestWasmVersionErrors(t *testing.T) {
+	_, err := (&wasmFile{module: &wasmir.Module{}}).getVersion()
+	require.ErrorIs(t, err, ErrNoGoVersionFound)
+
+	data := binary.AppendUvarint(nil, 0)
+	_, err = goVersionFromProducers(data)
+	require.ErrorIs(t, err, ErrNoGoVersionFound)
+}
+
+func TestWasmDwarfUnsupported(t *testing.T) {
+	_, err := (&wasmFile{}).getDwarf()
+	require.ErrorIs(t, err, ErrUnsupportedDwarf)
 }
 
 func appendWasmName(dst []byte, value string) []byte {
