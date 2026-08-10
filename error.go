@@ -22,6 +22,16 @@ var (
 	ErrInvalidGoVersion = errors.New("invalid go version")
 	// ErrNoGoRootFound is returned if no goroot was found in the binary.
 	ErrNoGoRootFound = errors.New("no goroot found")
+	// ErrWasmNoLinearMemory is returned if a WebAssembly module has no linear memory.
+	ErrWasmNoLinearMemory = errors.New("WebAssembly module has no linear memory")
+	// ErrWasmMemoryTooLarge is returned if reconstructing WebAssembly linear memory would exceed supported limits.
+	ErrWasmMemoryTooLarge = errors.New("WebAssembly minimum memory size is too large")
+	// ErrWasmConstExpressionMultipleValues is returned if a WebAssembly constant expression produces multiple values.
+	ErrWasmConstExpressionMultipleValues = errors.New("WebAssembly constant expression produces multiple values")
+	// ErrWasmConstExpressionNoValue is returned if a WebAssembly constant expression produces no value.
+	ErrWasmConstExpressionNoValue = errors.New("WebAssembly constant expression produces no value")
+	// ErrUnsupportedDwarf is returned when a binary format does not support DWARF data.
+	ErrUnsupportedDwarf = errors.New("DWARF is not supported")
 	// ErrNotAGPLBuild is returned for a functionality that is not supported in the BSD licensed
 	// version of this library. To use this functionality, compile using the build tag "gore_agpl"
 	// to enabled the AGPL licensed code.
