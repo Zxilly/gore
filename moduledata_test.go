@@ -120,3 +120,19 @@ func TestValidWasmModuledata(t *testing.T) {
 		})
 	}
 }
+
+func TestGo127ModuledataPointerOffsetsExcludeScalars(t *testing.T) {
+	offsets32 := moduledata_1_27_32{}.pointerOffsets()
+	require.NotContains(t, offsets32, 152)
+	require.Contains(t, offsets32, 156)
+	require.NotContains(t, offsets32, 160)
+	require.NotContains(t, offsets32, 164)
+	require.Contains(t, offsets32, 168)
+
+	offsets64 := moduledata_1_27_64{}.pointerOffsets()
+	require.NotContains(t, offsets64, 304)
+	require.Contains(t, offsets64, 312)
+	require.NotContains(t, offsets64, 320)
+	require.NotContains(t, offsets64, 328)
+	require.Contains(t, offsets64, 336)
+}

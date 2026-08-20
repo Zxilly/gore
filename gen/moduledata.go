@@ -386,7 +386,9 @@ func (g *moduleDataGenerator) writeVersionedModuleData(versionCode int, code str
 				case *ast.Ident:
 					switch t.Name {
 					case "uintptr":
-						g.writeln("%d,", byteOffset)
+						if name.Name != "typedesclen" && name.Name != "itaboffset" && name.Name != "itabsize" {
+							g.writeln("%d,", byteOffset)
+						}
 						byteOffset += wordSize
 					case "string":
 						g.writeln("%d,", byteOffset) // data ptr
