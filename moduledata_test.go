@@ -88,7 +88,18 @@ func TestValidWasmModuledata(t *testing.T) {
 		TypelinkAddr: 40,
 		TypelinkLen:  4,
 	}
-	require.True(t, validWasmModuledata(valid, 64))
+	require.True(t, validWasmModuledata(valid, 64, false))
+
+	validTypeDescriptors := moduledata{
+		PCLNTabAddr: 8,
+		PCLNTabLen:  16,
+		TypesAddr:   24,
+		TypesLen:    32,
+		TypeDescLen: 24,
+	}
+	require.True(t, validWasmModuledata(validTypeDescriptors, 64, true))
+	require.False(t, validWasmModuledata(valid, 64, true))
+	require.False(t, validWasmModuledata(validTypeDescriptors, 64, false))
 
 	tests := []struct {
 		name string
@@ -98,13 +109,14 @@ func TestValidWasmModuledata(t *testing.T) {
 		{name: "empty pclntab", md: moduledata{TypesLen: 1, TypelinkLen: 1}},
 		{name: "empty types", md: moduledata{PCLNTabLen: 1, TypelinkLen: 1}},
 		{name: "empty typelinks", md: moduledata{PCLNTabLen: 1, TypesLen: 1}},
+		{name: "type descriptors outside types", md: moduledata{PCLNTabLen: 1, TypesLen: 1, TypeDescLen: 2}},
 		{name: "pclntab outside memory", md: moduledata{PCLNTabAddr: 64, PCLNTabLen: 1, TypesLen: 1, TypelinkLen: 1}},
 		{name: "typelink length overflow", md: moduledata{PCLNTabLen: 1, TypesLen: 1, TypelinkLen: ^uint64(0)/4 + 1}},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.False(t, validWasmModuledata(test.md, 64))
+			require.False(t, validWasmModuledata(test.md, 64, false))
 		})
 	}
 }

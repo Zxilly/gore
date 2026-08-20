@@ -20,6 +20,7 @@ import (
 
 func newTypeParser(typesData []byte, baseAddres uint64, fi *FileInfo, fh fileHandler, resolver pointerResolver) *typeParser {
 	goversion := fi.goversion.Name
+	usesGo127Layout := usesGo127TypeLayout(goversion)
 
 	p := &typeParser{
 		goversion: goversion,
@@ -45,14 +46,15 @@ func newTypeParser(typesData []byte, baseAddres uint64, fi *FileInfo, fh fileHan
 		p.parseUint = readUintFunc64
 
 		// Use the correct map parser based on Go version and map experiment.
-		useSwissMap := usesSwissMapTypeLayout(goversion, typesData)
-		if GoVersionCompare(goversion, "go1.11beta1") < 0 {
+		if usesGo127Layout {
+			p.parseMap = mapTypeParseFuncGo12764
+		} else if GoVersionCompare(goversion, "go1.11beta1") < 0 {
 			p.parseMap = mapTypeParseFunc1764
 		} else if GoVersionCompare(goversion, "go1.12beta1") < 0 {
 			p.parseMap = mapTypeParseFunc1164
 		} else if GoVersionCompare(goversion, "go1.14beta1") < 0 {
 			p.parseMap = mapTypeParseFunc1264
-		} else if useSwissMap {
+		} else if usesSwissMapTypeLayout(goversion, typesData) {
 			p.parseMap = mapTypeParseFuncSwiss64
 		} else {
 			p.parseMap = mapTypeParseFunc64
@@ -69,14 +71,15 @@ func newTypeParser(typesData []byte, baseAddres uint64, fi *FileInfo, fh fileHan
 		p.parseUint = readUintFunc32
 
 		// Use the correct map parser based on Go version and map experiment.
-		useSwissMap := usesSwissMapTypeLayout(goversion, typesData)
-		if GoVersionCompare(goversion, "go1.11beta1") < 0 {
+		if usesGo127Layout {
+			p.parseMap = mapTypeParseFuncGo12732
+		} else if GoVersionCompare(goversion, "go1.11beta1") < 0 {
 			p.parseMap = mapTypeParseFunc1732
 		} else if GoVersionCompare(goversion, "go1.12beta1") < 0 {
 			p.parseMap = mapTypeParseFunc1132
 		} else if GoVersionCompare(goversion, "go1.14beta1") < 0 {
 			p.parseMap = mapTypeParseFunc1232
-		} else if useSwissMap {
+		} else if usesSwissMapTypeLayout(goversion, typesData) {
 			p.parseMap = mapTypeParseFuncSwiss32
 		} else {
 			p.parseMap = mapTypeParseFunc32
@@ -303,6 +306,7 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 	// we don't want to seek to a different location with the reader.
 	var child uint64
 	var key uint64
+	var descriptorExtra uint64
 
 	switch typ.Kind {
 
@@ -338,6 +342,7 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 
 		out := ftype.OutCount & (1<<15 - 1)
 		typ.FuncReturnVals = make([]*GoType, out)
+		descriptorExtra += (ftype.InCount + out) * uint64(p.wordsize)
 
 	case reflect.Interface:
 		iface, c, err := p.parseInterface(p)
@@ -356,6 +361,7 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 				return nil, fmt.Errorf("interface at 0x%x has unreasonable method count %d", address, iface.MethodsLen)
 			}
 			typ.Methods = make([]*TypeMethod, int(iface.MethodsLen))
+			descriptorExtra += iface.MethodsLen * uint64(binary.Size(imethod{}))
 		}
 
 	case reflect.Map:
@@ -394,6 +400,7 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 			return nil, fmt.Errorf("struct at 0x%x has unreasonable field count %d", address, s.FieldsLen)
 		}
 		typ.Fields = make([]*GoType, int(s.FieldsLen))
+		descriptorExtra += s.FieldsLen * uint64(3*p.wordsize)
 
 		// Resolve package path.
 		if s.PkgPath > uint64(p.base) {
@@ -424,6 +431,7 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 		count += c
 
 		if uc.Mcount != 0 {
+			descriptorExtra += uint64(uc.Mcount) * uint64(binary.Size(method{}))
 
 			// When typ.Kind is reflect.Ptr, PackagePath is not parsed, so read
 			// PkgPath from uncommonType as typ's PackagePath
@@ -466,6 +474,8 @@ func (p *typeParser) parseType(address uint64) (*GoType, error) {
 		// been created with the correct size.
 		child = uint64(address) + uint64(count)
 	}
+
+	typ.descriptorSize = uint64(count) + descriptorExtra
 
 	// For the rest we don't read linear anymore. Instead we seek around to
 	// parse all extra data structures.
@@ -883,6 +893,41 @@ var mapTypeParseFuncSwiss32 = func(p *typeParser) (mapType, int, error) {
 	}, c, err
 }
 
+// Map parser for the expanded Go 1.27 Swiss map layout (64 bit).
+var mapTypeParseFuncGo12764 = func(p *typeParser) (mapType, int, error) {
+	fileAddr := p.currentFileAddr()
+	var typ mapTypeGo12764
+	c, err := p.readType(&typ)
+	if err != nil {
+		return mapType{}, c, err
+	}
+
+	return mapType{
+		Key:    resolvePointer(p.resolver, typ.Key, fileAddr),
+		Elem:   resolvePointer(p.resolver, typ.Elem, fileAddr+8),
+		Bucket: resolvePointer(p.resolver, typ.Group, fileAddr+16),
+		Hasher: resolvePointer(p.resolver, typ.Hasher, fileAddr+24),
+		Flags:  typ.Flags,
+	}, c, nil
+}
+
+// Map parser for the expanded Go 1.27 Swiss map layout (32 bit).
+var mapTypeParseFuncGo12732 = func(p *typeParser) (mapType, int, error) {
+	var typ mapTypeGo12732
+	c, err := p.readType(&typ)
+	if err != nil {
+		return mapType{}, c, err
+	}
+
+	return mapType{
+		Key:    uint64(typ.Key),
+		Elem:   uint64(typ.Elem),
+		Bucket: uint64(typ.Group),
+		Hasher: uint64(typ.Hasher),
+		Flags:  typ.Flags,
+	}, c, nil
+}
+
 // Map parser for Go 1.7 to 1.10 (64 bit)
 var mapTypeParseFunc1764 = func(p *typeParser) (mapType, int, error) {
 	fileAddr := p.currentFileAddr()
@@ -1295,6 +1340,35 @@ type mapTypeSwiss32 struct {
 	SlotSize  uint32
 	ElemOff   uint32
 	Flags     uint32
+}
+
+type mapTypeGo12764 struct {
+	Key        uint64
+	Elem       uint64
+	Group      uint64
+	Hasher     uint64
+	GroupSize  uint64
+	KeysOff    uint64
+	KeyStride  uint64
+	ElemsOff   uint64
+	ElemStride uint64
+	ElemOff    uint64
+	Flags      uint32
+	_          uint32
+}
+
+type mapTypeGo12732 struct {
+	Key        uint32
+	Elem       uint32
+	Group      uint32
+	Hasher     uint32
+	GroupSize  uint32
+	KeysOff    uint32
+	KeyStride  uint32
+	ElemsOff   uint32
+	ElemStride uint32
+	ElemOff    uint32
+	Flags      uint32
 }
 
 // Map structure for Go 1.7 to Go 1.10

@@ -7,6 +7,7 @@ package gore
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -19,6 +20,12 @@ const (
 	tflagExtraStar uint8 = 1 << 1
 	tflagUncommon  uint8 = 1 << 0
 )
+
+const go127TypeLayoutVersion = "go1.27rc1"
+
+func usesGo127TypeLayout(goVersion string) bool {
+	return GoVersionCompare(goVersion, go127TypeLayoutVersion) >= 0
+}
 
 type _typeField uint8
 
@@ -52,15 +59,24 @@ func getTypes(fileInfo *FileInfo, f fileHandler, md moduledata) (map[uint64]*GoT
 		return nil, fmt.Errorf("failed to get types data section: %w", err)
 	}
 
-	typeLink, err := md.TypeLinkData()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get type link data: %w", err)
-	}
-
 	// New parser
 	typesAddr := md.Types().Address
 	resolver := newPointerResolver(f)
 	parser := newTypeParser(types, typesAddr, fileInfo, f, resolver)
+	if usesGo127TypeLayout(fileInfo.goversion.Name) {
+		if md.TypeDescLen == 0 {
+			return nil, errors.New("Go 1.27 moduledata has no type descriptor region")
+		}
+		if _, err := parseTypeDescriptors(parser, md.TypeDescLen); err != nil {
+			return nil, fmt.Errorf("failed to parse type descriptors: %w", err)
+		}
+		return parser.parsedTypes(), nil
+	}
+
+	typeLink, err := md.TypeLinkData()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get type link data: %w", err)
+	}
 	for _, off := range typeLink {
 		_, err := parser.parseType(uint64(off) + typesAddr)
 		if err != nil {
@@ -68,6 +84,35 @@ func getTypes(fileInfo *FileInfo, f fileHandler, md moduledata) (map[uint64]*GoT
 		}
 	}
 	return parser.parsedTypes(), nil
+}
+
+func parseTypeDescriptors(parser *typeParser, descriptorLen uint64) ([]int32, error) {
+	wordSize := uint64(parser.wordsize)
+	offsets := make([]int32, 0, descriptorLen/(2*wordSize))
+	for offset := wordSize; offset < descriptorLen; {
+		offset = (offset + wordSize - 1) &^ (wordSize - 1)
+		if offset >= descriptorLen {
+			break
+		}
+
+		address := parser.base + offset
+		typ, err := parser.parseType(address)
+		if err != nil {
+			return nil, fmt.Errorf("type descriptor at offset %#x: %w", offset, err)
+		}
+		if typ.Kind == reflect.Invalid {
+			return nil, fmt.Errorf("invalid type kind at offset %#x", offset)
+		}
+		if typ.descriptorSize == 0 || typ.descriptorSize > descriptorLen-offset {
+			return nil, fmt.Errorf("invalid type descriptor size %#x at offset %#x (descriptor region %#x)", typ.descriptorSize, offset, descriptorLen)
+		}
+		if offset > 1<<31-1 {
+			return nil, fmt.Errorf("type descriptor offset %#x exceeds int32", offset)
+		}
+		offsets = append(offsets, int32(offset))
+		offset += typ.descriptorSize
+	}
+	return offsets, nil
 }
 
 func getLegacyTypes(fileInfo *FileInfo, f fileHandler, md moduledata) (map[uint64]*GoType, error) {
@@ -137,8 +182,9 @@ type GoType struct {
 	// IsVariadic is true if the last argument type is variadic. For example "func(s string, n ...int)"
 	IsVariadic bool
 	// Methods holds information of the types methods.
-	Methods []*TypeMethod
-	flag    uint8
+	Methods        []*TypeMethod
+	flag           uint8
+	descriptorSize uint64
 }
 
 // String implements the fmt.Stringer interface.
