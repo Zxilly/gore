@@ -327,6 +327,10 @@ func (g *moduleDataGenerator) writeVersionedModuleData(versionCode int, code str
 			g.writeln("TypesLen: %s,", g.wrapValue("md.Etypes - md.Types", bits))
 		}
 
+		if exist("typedesclen") {
+			g.writeln("TypeDescLen: %s,", g.wrapValue("md.Typedesclen", bits))
+		}
+
 		if exist("typelinks") {
 			g.writeln("TypelinkAddr: %s,", g.wrapValue("md.Typelinks", bits))
 			g.writeln("TypelinkLen: %s,", g.wrapValue("md.Typelinkslen", bits))
@@ -335,6 +339,11 @@ func (g *moduleDataGenerator) writeVersionedModuleData(versionCode int, code str
 		if exist("itablinks") {
 			g.writeln("ITabLinkAddr: %s,", g.wrapValue("md.Itablinks", bits))
 			g.writeln("ITabLinkLen: %s,", g.wrapValue("md.Itablinkslen", bits))
+		}
+
+		if exist("itaboffset", "itabsize") {
+			g.writeln("ITabOffset: %s,", g.wrapValue("md.Itaboffset", bits))
+			g.writeln("ITabSize: %s,", g.wrapValue("md.Itabsize", bits))
 		}
 
 		if exist("ftab") {

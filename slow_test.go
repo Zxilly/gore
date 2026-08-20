@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"testing"
@@ -198,6 +199,12 @@ func TestWasmOpen(t *testing.T) {
 			require.NoError(t, err)
 			require.NotEmpty(t, types)
 
+			moduledata, err := file.Moduledata()
+			require.NoError(t, err)
+			typeLinks, err := moduledata.TypeLinkData()
+			require.NoError(t, err)
+			require.NotEmpty(t, typeLinks)
+
 			parsed, ok := file.GetParsedFile().(WasmInfo)
 			require.True(t, ok)
 			require.NotNil(t, parsed.Module)
@@ -323,6 +330,34 @@ func TestSwissMapTypes(t *testing.T) {
 	}
 
 	t.Fatal("main.namedMap was not found")
+}
+
+func TestGo127TypeLinkOffsetsMatchRuntime(t *testing.T) {
+	if !usesGo127TypeLayout(testCompilerVersion()) {
+		t.Skip("type descriptors were introduced in Go 1.27")
+	}
+
+	build := buildSingleTestResource(t, go127TypeLinksTestSrc)
+	output, err := exec.Command(build.exe).Output()
+	require.NoError(t, err)
+
+	rawOffsets := strings.Split(strings.TrimSpace(string(output)), ",")
+	expected := make([]int32, 0, len(rawOffsets))
+	for _, raw := range rawOffsets {
+		offset, err := strconv.ParseInt(raw, 10, 32)
+		require.NoError(t, err)
+		expected = append(expected, int32(offset))
+	}
+	require.NotEmpty(t, expected)
+
+	file, err := Open(build.exe)
+	require.NoError(t, err)
+	t.Cleanup(func() { require.NoError(t, file.Close()) })
+	moduledata, err := file.Moduledata()
+	require.NoError(t, err)
+	actual, err := moduledata.TypeLinkData()
+	require.NoError(t, err)
+	require.Equal(t, expected, actual)
 }
 
 func TestGetCompilerVersion(t *testing.T) {
@@ -531,5 +566,31 @@ func main() {
 	sink = reflect.TypeOf(h)
 	sink = reflect.TypeOf(h.M)
 	sink = h.M.Touch()
+}
+`
+
+const go127TypeLinksTestSrc = `package main
+
+import (
+	"fmt"
+	_ "reflect"
+	"unsafe"
+)
+
+//go:linkname typeLinks reflect.typelinks
+func typeLinks() ([]unsafe.Pointer, [][]int32)
+
+func main() {
+	_, modules := typeLinks()
+	first := true
+	for _, offsets := range modules {
+		for _, offset := range offsets {
+			if !first {
+				fmt.Print(",")
+			}
+			first = false
+			fmt.Print(offset)
+		}
+	}
 }
 `

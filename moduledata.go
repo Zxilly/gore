@@ -57,14 +57,17 @@ type moduledata struct {
 	NoPtrBssAddr, NoPtrBssLen   uint64
 
 	TypesAddr, TypesLen       uint64
+	TypeDescLen               uint64
 	TypelinkAddr, TypelinkLen uint64
 	ITabLinkAddr, ITabLinkLen uint64
+	ITabOffset, ITabSize      uint64
 	FuncTabAddr, FuncTabLen   uint64
 	PCLNTabAddr, PCLNTabLen   uint64
 
 	GoFuncVal uint64
 
 	fh       fileHandler
+	fileInfo *FileInfo
 	resolver pointerResolver
 }
 
@@ -160,6 +163,26 @@ func (m moduledata) TypeLink() ModuleDataSection {
 
 // TypeLinkData returns the typelink section.
 func (m moduledata) TypeLinkData() ([]int32, error) {
+	fileInfo := m.fileInfo
+	if fileInfo == nil || fileInfo.goversion == nil {
+		return nil, ErrNoGoVersionFound
+	}
+	if usesGo127TypeLayout(fileInfo.goversion.Name) {
+		if m.TypeDescLen == 0 {
+			return nil, errors.New("Go 1.27 moduledata has no type descriptor region")
+		}
+		types, err := m.Types().Data()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get types data section: %w", err)
+		}
+		parser := newTypeParser(types, m.TypesAddr, fileInfo, m.fh, newPointerResolver(m.fh))
+		offsets, err := parseTypeDescriptors(parser, m.TypeDescLen)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse type descriptors: %w", err)
+		}
+		return offsets, nil
+	}
+
 	base, data, err := m.fh.getSectionDataFromAddress(m.TypelinkAddr)
 
 	if err != nil {
@@ -365,13 +388,16 @@ load:
 	}
 
 	md := vmd.toModuledata()
+	usesTypeDescriptors := usesGo127TypeLayout(f.FileInfo.goversion.Name)
 
 	// WebAssembly code addresses are function indices rather than ranges in
 	// linear memory, so the native text-section validation does not apply. The
-	// pclntab, types, and typelinks still have to point into linear memory; use
-	// those ranges to reject false matches for the pclntab pointer.
+	// pclntab and types still have to point into linear memory; use those ranges
+	// to reject false matches for the pclntab pointer. Go 1.27 stores typelink
+	// descriptors inline at the beginning of the types region instead of in a
+	// separate typelinks slice.
 	if f.FileInfo.Arch == ArchWASM {
-		if !validWasmModuledata(md, secSize) {
+		if !validWasmModuledata(md, secSize, usesTypeDescriptors) {
 			if fromSymbol {
 				return moduledata{}, errors.New("WebAssembly moduledata at symbol address failed memory validation")
 			}
@@ -379,6 +405,7 @@ load:
 			goto search
 		}
 		md.fh = f.fh
+		md.fileInfo = f.FileInfo
 		return md, nil
 	}
 
@@ -400,17 +427,24 @@ load:
 	}
 
 	md.fh = f.fh
+	md.fileInfo = f.FileInfo
 	md.resolver = resolver
 
 	return md, nil
 }
 
-func validWasmModuledata(md moduledata, memorySize uint64) bool {
-	if md.PCLNTabLen == 0 || md.TypesLen == 0 || md.TypelinkLen == 0 {
+func validWasmModuledata(md moduledata, memorySize uint64, usesTypeDescriptors bool) bool {
+	if md.PCLNTabLen == 0 || md.TypesLen == 0 {
 		return false
 	}
 	if !addressRangeWithin(md.PCLNTabAddr, md.PCLNTabLen, memorySize) ||
 		!addressRangeWithin(md.TypesAddr, md.TypesLen, memorySize) {
+		return false
+	}
+	if usesTypeDescriptors {
+		return md.TypeDescLen != 0 && md.TypeDescLen <= md.TypesLen
+	}
+	if md.TypelinkLen == 0 {
 		return false
 	}
 	if md.TypelinkLen > ^uint64(0)/4 {
