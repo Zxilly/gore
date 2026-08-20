@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
 	"testing"
 
@@ -317,6 +318,16 @@ func TestClassifyPackage(t *testing.T) {
 			assert.Equal(test.pkgClass, class, fmt.Sprintf("Incorrect classification of: %s with filepath: %s", test.pkgsName, test.pkgPath))
 		})
 	}
+}
+
+func TestRuntimePlaceholderPackageClassification(t *testing.T) {
+	pkg := &Package{
+		Name:     "_",
+		Filepath: "C:/Users/test/go/pkg/mod/golang.org/toolchain@v0.0.1-go1.27.0/src/runtime",
+	}
+
+	assert.Equal(t, ClassSTD, NewPathPackageClassifier("command-line-arguments").Classify(pkg))
+	assert.Equal(t, ClassSTD, NewModPackageClassifier(&debug.BuildInfo{}).Classify(pkg))
 }
 
 func TestGetSourceFiles(t *testing.T) {
