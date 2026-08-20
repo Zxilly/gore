@@ -123,6 +123,10 @@ func (c *PathPackageClassifier) Classify(pkg *Package) PackageClass {
 		return ClassGenerated
 	}
 
+	if isRuntimePackage(pkg) {
+		return ClassSTD
+	}
+
 	if IsStandardLibrary(pkg.Name) {
 		return ClassSTD
 	}
@@ -178,11 +182,6 @@ func (c *PathPackageClassifier) Classify(pkg *Package) PackageClass {
 		(path.Base(path.Dir(pkg.Filepath)) == path.Base(c.mainFilepath)) {
 		return ClassMain
 	}
-	// Special case for entry point package.
-	if pkg.Name == "" && path.Base(pkg.Filepath) == "runtime" {
-		return ClassSTD
-	}
-
 	// At this point, if it's a subpackage of the main assume main.
 	if strings.HasPrefix(pkg.Filepath, c.mainFilepath) {
 		return ClassMain
@@ -227,6 +226,10 @@ func isGeneratedPackage(pkg *Package) bool {
 	return false
 }
 
+func isRuntimePackage(pkg *Package) bool {
+	return (pkg.Name == "" || pkg.Name == "_") && path.Base(pkg.Filepath) == "runtime"
+}
+
 // NewModPackageClassifier creates a new mod based package classifier.
 func NewModPackageClassifier(buildInfo *debug.BuildInfo) *ModPackageClassifier {
 	return &ModPackageClassifier{modInfo: buildInfo}
@@ -239,6 +242,10 @@ type ModPackageClassifier struct {
 
 // Classify performs the classification.
 func (c *ModPackageClassifier) Classify(pkg *Package) PackageClass {
+	if isRuntimePackage(pkg) {
+		return ClassSTD
+	}
+
 	if IsStandardLibrary(pkg.Name) {
 		return ClassSTD
 	}
